@@ -22,10 +22,10 @@
 # THE SOFTWARE.
 #
 
-import ctypes
+# import ctypes
 import logging
-import math
-from enum import IntFlag,Enum
+# import math
+# from enum import IntFlag,Enum
 # from pymeasure.instruments.hp.hplegacyinstrument import HPLegacyInstrument, StatusBitsBase
 from pymeasure.instruments import Instrument
 from pymeasure.instruments.validators import strict_discrete_set, strict_range
@@ -33,78 +33,6 @@ from pymeasure.instruments.validators import strict_discrete_set, strict_range
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
-
-c_uint8 = ctypes.c_uint8
-
-
-# class SRQ(ctypes.BigEndianStructure):
-#     """Support class for the SRQ handling
-#     """
-#     _fields_ = [
-#         ("power_on", c_uint8, 1),
-#         ("not_assigned_1", c_uint8, 1),
-#         ("calibration", c_uint8, 1),
-#         ("front_panel_button", c_uint8, 1),
-#         ("internal_error", c_uint8, 1),
-#         ("syntax_error", c_uint8, 1),
-#         ("not_assigned_2", c_uint8, 1),
-#         ("data_ready", c_uint8, 1),
-#     ]
-
-#     def __str__(self):
-#         """
-#         Returns a pretty formatted string showing the status of the instrument
-
-#         """
-#         ret_str = ""
-#         for field in self._fields_:
-#             ret_str = ret_str + f"{field[0]}: {hex(getattr(self, field[0]))}\n"
-
-#         return ret_str
-
-
-# class Status(StatusBitsBase):
-#     """
-#     Support-Class with the bit assignments for the 5 status byte of the HP3478A
-#     """
-
-#     _fields_ = [
-#         # Byte 1: Function, Range and Number of Digits
-#         ("function", c_uint8, 3),  # bit 5..7
-#         ("range", c_uint8, 3),  # bit 2..4
-#         ("digits", c_uint8, 2),  # bit 0..1
-#         # Byte 2: Status Bits
-#         ("res1", c_uint8, 1),
-#         ("ext_trig", c_uint8, 1),
-#         ("cal_enable", c_uint8, 1),
-#         ("front_rear", c_uint8, 1),
-#         ("fifty_hz", c_uint8, 1),
-#         ("auto_zero", c_uint8, 1),
-#         ("auto_range", c_uint8, 1),
-#         ("int_trig", c_uint8, 1),
-#         # Byte 3: Serial Poll Mask (SRQ)
-#         # ("SRQ_PON", c_uint8, 1),
-#         # ("res3", c_uint8, 1),
-#         # ("SRQ_cal_error", c_uint8, 1),
-#         # ("SRQ_front_panel", c_uint8, 1),
-#         # ("SRQ_internal_error", c_uint8, 1),
-#         # ("SRQ_syntax_error", c_uint8, 1),
-#         # ("res2", c_uint8, 1),
-#         # ("SRQ_data_rdy", c_uint8, 1),
-#         ("SRQ", SRQ),
-#         # Byte 4: Error Information
-#         # ("res5", c_uint8, 1),
-#         # ("res4", c_uint8, 1),
-#         # ("ERR_AD_Link", c_uint8, 1),
-#         # ("ERR_AD", c_uint8, 1),
-#         # ("ERR_slope", c_uint8, 1),
-#         # ("ERR_ROM", c_uint8, 1),
-#         # ("ERR_RAM", c_uint8, 1),
-#         # ("ERR_cal", c_uint8, 1),
-#         (        "Error_Status", c_uint8, 8),
-#         # Byte 5: DAC Value
-#         ("DAC_value", c_uint8, 8),
-#     ]
 
 
 class HP3314A(Instrument):
@@ -125,15 +53,29 @@ class HP3314A(Instrument):
             **kwargs,
         )
 
-
     # overlaoding the read-fcn for now, until GPIBG issue fixed
     # Problem is theat normal read() will run into timeout, even with proper temchar
-
     def read(self):
         rec_data = self.adapter.connection.read_bytes(30)
         return rec_data.rstrip()
 
-    AM_enabled = Instrument.control(
+    def values(self, command):
+        self.write(command)
+        return self.read()
+
+    amplitude = Instrument.control(
+        "QAP",
+        "AP%fVO",
+        """
+        This property controls the Amplitude (referenced to 50 Ohms load(!)) of the unit.
+
+        """,
+        validator=strict_range,
+        values=[1E-6, 10],
+        get_process=lambda v: float(v.lstrip(b'AP').rstrip(b'VO')),
+        )
+
+    AM = Instrument.control(
        "QAM", "AM%d",
        """
        this property controls the featrue of amplitude modulation (AM) of the unit
@@ -143,10 +85,48 @@ class HP3314A(Instrument):
        """,
        validator=strict_discrete_set,
        values={False: 0, True: 1},
-       map_values=True)
+       map_values=True,
+       get_process=lambda v: int(v.lstrip(b'AM')),
+       )
 
-    FM_enabled = Instrument.control(
-       "QFM", "DM%d",
+    # TODO: add ARB mode switching
+
+    # TODO add Calubrate functions (CA,CD,CE,CF)
+
+    def check_errors(self):
+        pending_error = self.values("QER").lstrip(b"ER")
+        if pending_error != b'00':
+            log.warning(f"HP3314A {self.adapter.connection.resource_name}: Error {pending_error}")
+            return pending_error
+
+    data_transfer_buffered = Instrument.setting(
+        "DM%d",
+        """
+        This setting switches between unbuffered (False) and buffered (True)
+        data transfer mode.
+        """,
+        values={False: 1, True: 2},
+        map_values=True,
+        )
+
+    # TODO: impleent delete_vector (DV) function
+
+    external_trigger = Instrument.control(
+       "QSR", "SR%d",
+       """
+       this property controls the trigger source selection:
+           False: Internal
+           True: External
+
+       """,
+       validator=strict_discrete_set,
+       values={False: 1, True: 2},
+       map_values=True,
+       get_process=lambda v: int(v.lstrip(b'SR')),
+       )
+
+    FM = Instrument.control(
+       "QFM", "FM%d",
        """
        this property controls the featrue of frequency modulation (FM) of the unit
 
@@ -155,10 +135,24 @@ class HP3314A(Instrument):
        """,
        validator=strict_discrete_set,
        values={False: 0, True: 1},
-       map_values=True)
+       map_values=True,
+       get_process=lambda v: int(v.lstrip(b'FM')),
+       )
+
+    frequency = Instrument.control(
+        "QFR",
+        "FR%fHZ",
+        """
+        This Ppoperty controls the frequency of the unit.
+
+        """,
+        validator=strict_range,
+        values=[0.001, 20000000],
+        get_process=lambda v: float(v.lstrip(b'FR').rstrip(b'.HZ')),
+        )
 
     func = Instrument.control(
-       "QFR", "FR %d",
+       "QFU", "FU %d",
        """
        this property controls the function (output mode) of the unit
 
@@ -171,17 +165,151 @@ class HP3314A(Instrument):
                "Square": 2,
                "Trig": 3,
                },
-       map_values=True)
+       map_values=True,
+       get_process=lambda v: v.lstrip(b'FU'),
+       )
 
-    frequency = Instrument.control(
-        "QFR",
-        "FR%fHZ",
+    func_inverted = Instrument.control(
+       "QFI", "FI%d",
+       """
+       A property that controls if the output of the intrument is inverted
+
+       """,
+       validator=strict_discrete_set,
+       values={False: 0, True: 1},
+       map_values=True,
+       get_process=lambda v: v.lstrip(b'FI'),
+       )
+
+    # TODO: implement inversert vector
+
+    manual_sweep_enabled = Instrument.control(
+       "QMA", "MA%d",
+       """
+       Thsi property enabled the manual sweep
+
+       """,
+       validator=strict_discrete_set,
+       values={False: 0, True: 1},
+       map_values=True,
+       get_process=lambda v: v.lstrip(b'MA'),
+       )
+
+    marker_frequency = Instrument.control(
+        "QMK",
+        "MK%fHZ",
         """
-        This Property controls the frequency of the unit.
+        This property controls the marker frequency setting .
 
         """,
         validator=strict_range,
-        values=[0.001, 20000000])
+        values=[0.001, 20000000],
+        get_process=lambda v: float(v.lstrip(b'MK').rstrip(b'HZ')),
+        )
+
+    mode = Instrument.control(
+        "QMO", "MO%d",
+        """
+        this property controls the mode of the unit
+
+        ...
+
+        """,
+        validator=strict_discrete_set,
+        values={"Free_Run": 1,
+                "Gated": 2,
+                "n_cycle": 3,
+                "half_cycle": 4,
+                "fin_N_X": 5,
+                "fin_X_div_N": 6
+                },
+        map_values=True,
+        get_process=lambda v: v.lstrip(b'MO'),
+        )
+
+    n = Instrument.control(
+        "QNM",
+        "NM%dEN",
+        """
+        This property controls the number of cycles/events to be put put by the instrument.
+
+        """,
+        validator=strict_range,
+        values=[1, 9999],
+        get_process=lambda v: int(v.lstrip(b'NM').rstrip(b' EN')),
+        )
+
+    negative_trigger_slope = Instrument.control(
+       "QSL", "SL%d",
+       """
+       This property controls the trigger slope selection:
+           False: positive
+           True: negative
+
+       """,
+       validator=strict_discrete_set,
+       values={False: 1, True: 2},
+       map_values=True,
+       get_process=lambda v: v.lstrip(b'SL'),
+       )
+
+    offset = Instrument.control(
+        "QOF",
+        "OF%fVO",
+        """
+        This property controls the offset of the output signal.
+
+        """,
+        validator=strict_range,
+        values=[-5, 5],
+        get_process=lambda v: float(v.lstrip(b'OF').rstrip(b'VO')),
+        )
+
+    phase = Instrument.control(
+        "QPH",
+        "PH%fDG",
+        """
+        This property controls the phase of the output signal.
+
+        """,
+        validator=strict_range,
+        values=[0, 360.0],
+        get_process=lambda v: float(v.lstrip(b'PH').rstrip(b'DG')),
+        )
+
+    # TODO: add PLL mask
+
+    def preset(self):
+        """
+        Presets the device to a default state, refer to manaul for specifics
+        """
+        self.write("PR")
+
+    # TODO: add range hold and range up/down
+
+    # TODO: add comment abour store
+    recall_preset = Instrument.setting(
+        "RC%d",
+        """
+        With this setting user-defined presets can be recalled
+        """,
+        values=[0, 5],
+        validator=strict_range,
+        )
+
+    recall_wave = Instrument.control(
+        "QRW",
+        "RW%f",
+        """
+        This property controls the arb-waveform.
+        when selecting a wavefowm, this also enabled the ARB-function
+        """,
+        validator=strict_range,
+        values=[0, 5],
+        get_process=lambda v: int(v.lstrip(b'PH')),
+        )
+
+    # TODO: add SRQ mask
 
     start_frequency = Instrument.control(
         "QST",
@@ -191,7 +319,9 @@ class HP3314A(Instrument):
 
         """,
         validator=strict_range,
-        values=[0.001, 20000000])
+        values=[0.001, 20000000],
+        get_process=lambda v: float(v.lstrip(b'ST').rstrip(b'.HZ')),
+        )
 
     stop_frequency = Instrument.control(
         "QSP",
@@ -201,25 +331,18 @@ class HP3314A(Instrument):
 
         """,
         validator=strict_range,
-        values=[0.001, 20000000])
+        values=[0.001, 20000000],
+        get_process=lambda v: float(v.lstrip(b'SP').rstrip(b'.HZ')),
+        )
 
-    mode = Instrument.control(
-       "QMO", "MO%d",
-       """
-       this property controls the mode of the unit
-
-       ...
-
-       """,
-       validator=strict_discrete_set,
-       values={"Free_Run": 1,
-               "Gated": 2,
-               "n_cycle": 3,
-               "half_cycle": 4,
-               "fin_N_X": 5,
-               "fin_X_div_N": 6
-               },
-       map_values=True)
+    store_preset = Instrument.setting(
+        "SO%d",
+        """
+        With this setting user-defined presets can be stored
+        """,
+        values=[0, 5],
+        validator=strict_range,
+        )
 
     sweep = Instrument.control(
        "QSW", "SW %d",
@@ -234,7 +357,21 @@ class HP3314A(Instrument):
                "lin": 1,
                "log": 2,
                },
-       map_values=True)
+       map_values=True,
+       get_process=lambda v: v.lstrip(b'SW'),
+       )
+
+    symmetry = Instrument.control(
+        "QSY",
+        "SY%dPS",
+        """
+        This property controls the phase of the output signal.
+
+        """,
+        validator=strict_range,
+        values=[1, 99],
+        get_process=lambda v: int(v.lstrip(b'PH').rstrip(b'DG')),
+        )
 
     time_intervall = Instrument.control(
         "QTI",
@@ -244,7 +381,41 @@ class HP3314A(Instrument):
 
         """,
         validator=strict_range,
-        values=[0.000001, 10000])
+        values=[0.000001, 10000],
+        get_process=lambda v: float(v.lstrip(b'TI').rstrip(b'SN')),
+        )
+
+    trigger_threshold = Instrument.control(
+           "QLV", "LV%d",
+           """
+           this property controls the sweep-mode of the unit
+
+           ...
+
+           """,
+           validator=strict_discrete_set,
+           values={"1V": 1,
+                   "0V": 2,
+                   },
+           map_values=True,
+           get_process=lambda v: v.lstrip(b'LV'),
+           )
+
+    VCO = Instrument.control(
+       "QVC", "VC%d",
+       """
+       this property controls the feature of VCO
+
+       ...
+
+       """,
+       validator=strict_discrete_set,
+       values={False: 0, True: 1},
+       map_values=True,
+       get_process=lambda v: v.lstrip(b'VC'),
+       )
+
+    # TODO* Add vector commands
 
     def reset(self):
         """
@@ -261,4 +432,3 @@ class HP3314A(Instrument):
         self.adapter.connection.clear()
         self.adapter.connection.close()
         super().shutdown()
-

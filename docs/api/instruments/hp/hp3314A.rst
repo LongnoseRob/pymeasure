@@ -1,0 +1,7 @@
+######################################
+HP 3314A Arbitrary Waveform Generator
+######################################
+
+.. autoclass:: pymeasure.instruments.hp.HP3314A
+    :members:
+    :show-inheritance:
