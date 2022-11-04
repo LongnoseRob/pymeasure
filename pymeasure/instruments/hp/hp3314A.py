@@ -53,7 +53,7 @@ class HP3314A(Instrument):
             **kwargs,
         )
 
-    # overlaoding the read-fcn for now, until GPIBG issue fixed
+    # overlaoding the read-fcn for now, until GPIB issue fixed
     # Problem is theat normal read() will run into timeout, even with proper temchar
     def read(self):
         rec_data = self.adapter.connection.read_bytes(30)
@@ -67,7 +67,7 @@ class HP3314A(Instrument):
         "QAP",
         "AP%fVO",
         """
-        This property controls the Amplitude (referenced to 50 Ohms load(!)) of the unit.
+        controls the Amplitude (referenced to 50 Ohms load(!)) of the unit.
 
         """,
         validator=strict_range,
@@ -78,7 +78,7 @@ class HP3314A(Instrument):
     AM = Instrument.control(
        "QAM", "AM%d",
        """
-       this property controls the featrue of amplitude modulation (AM) of the unit
+       controls the feature of amplitude modulation (AM) of the unit
 
        ...
 
@@ -114,7 +114,7 @@ class HP3314A(Instrument):
     external_trigger = Instrument.control(
        "QSR", "SR%d",
        """
-       this property controls the trigger source selection:
+       controls the trigger source selection:
            False: Internal
            True: External
 
@@ -128,7 +128,7 @@ class HP3314A(Instrument):
     FM = Instrument.control(
        "QFM", "FM%d",
        """
-       this property controls the featrue of frequency modulation (FM) of the unit
+       controls the featrue of frequency modulation (FM) of the unit
 
        ...
 
@@ -143,7 +143,7 @@ class HP3314A(Instrument):
         "QFR",
         "FR%fHZ",
         """
-        This Ppoperty controls the frequency of the unit.
+        controls the output frequency of the unit.
 
         """,
         validator=strict_range,
@@ -154,7 +154,7 @@ class HP3314A(Instrument):
     func = Instrument.control(
        "QFU", "FU %d",
        """
-       this property controls the function (output mode) of the unit
+       controls the function (output mode) of the unit
 
        ...
 
@@ -172,7 +172,7 @@ class HP3314A(Instrument):
     func_inverted = Instrument.control(
        "QFI", "FI%d",
        """
-       A property that controls if the output of the intrument is inverted
+       controls if the output of the intrument is inverted
 
        """,
        validator=strict_discrete_set,
@@ -181,12 +181,12 @@ class HP3314A(Instrument):
        get_process=lambda v: v.lstrip(b'FI'),
        )
 
-    # TODO: implement inversert vector
+    # TODO: implement insert vector
 
     manual_sweep_enabled = Instrument.control(
        "QMA", "MA%d",
        """
-       Thsi property enabled the manual sweep
+       enables the manual sweep
 
        """,
        validator=strict_discrete_set,
@@ -199,7 +199,7 @@ class HP3314A(Instrument):
         "QMK",
         "MK%fHZ",
         """
-        This property controls the marker frequency setting .
+        controls the marker frequency setting .
 
         """,
         validator=strict_range,
@@ -210,8 +210,9 @@ class HP3314A(Instrument):
     mode = Instrument.control(
         "QMO", "MO%d",
         """
-        this property controls the mode of the unit
+        controls the mode of the unit
 
+        TODO: be more specific
         ...
 
         """,
@@ -231,7 +232,7 @@ class HP3314A(Instrument):
         "QNM",
         "NM%dEN",
         """
-        This property controls the number of cycles/events to be put put by the instrument.
+        controls the number of cycles/events to be put put by the instrument.
 
         """,
         validator=strict_range,
@@ -242,7 +243,7 @@ class HP3314A(Instrument):
     negative_trigger_slope = Instrument.control(
        "QSL", "SL%d",
        """
-       This property controls the trigger slope selection:
+       controls the trigger slope selection:
            False: positive
            True: negative
 
@@ -257,7 +258,7 @@ class HP3314A(Instrument):
         "QOF",
         "OF%fVO",
         """
-        This property controls the offset of the output signal.
+        controls the offset of the output signal.
 
         """,
         validator=strict_range,
@@ -269,7 +270,7 @@ class HP3314A(Instrument):
         "QPH",
         "PH%fDG",
         """
-        This property controls the phase of the output signal.
+        controls the phase of the output signal.
 
         """,
         validator=strict_range,
@@ -301,7 +302,7 @@ class HP3314A(Instrument):
         "QRW",
         "RW%f",
         """
-        This property controls the arb-waveform.
+        controls the selection of the waveform for the ARB functionality
         when selecting a wavefowm, this also enabled the ARB-function
         """,
         validator=strict_range,
@@ -315,7 +316,7 @@ class HP3314A(Instrument):
         "QST",
         "ST%fHZ",
         """
-        This Property controls the frequency of the unit.
+        controls the start-frequency for sweeps
 
         """,
         validator=strict_range,
@@ -327,7 +328,7 @@ class HP3314A(Instrument):
         "QSP",
         "SP%fHZ",
         """
-        This Property controls the frequency of the unit.
+        controls the stop-frequency for swee@s
 
         """,
         validator=strict_range,
@@ -347,7 +348,7 @@ class HP3314A(Instrument):
     sweep = Instrument.control(
        "QSW", "SW %d",
        """
-       this property controls the sweep-mode of the unit
+       controls the sweep-mode of the unit
 
        ...
 
@@ -365,7 +366,7 @@ class HP3314A(Instrument):
         "QSY",
         "SY%dPS",
         """
-        This property controls the phase of the output signal.
+        controls the phase of the output signal.
 
         """,
         validator=strict_range,
@@ -377,7 +378,7 @@ class HP3314A(Instrument):
         "QTI",
         "TI%fSN",
         """
-        This Property controls the sweep-tim / trigger time intervall of the unit.
+        controls the sweep-tim / trigger time intervall of the unit.
 
         """,
         validator=strict_range,
@@ -386,25 +387,25 @@ class HP3314A(Instrument):
         )
 
     trigger_threshold = Instrument.control(
-           "QLV", "LV%d",
-           """
-           this property controls the sweep-mode of the unit
+        "QLV", "LV%d",
+        """
+        controls the sweep-mode of the unit
 
-           ...
+        ...
 
-           """,
-           validator=strict_discrete_set,
-           values={"1V": 1,
-                   "0V": 2,
-                   },
-           map_values=True,
-           get_process=lambda v: v.lstrip(b'LV'),
-           )
+        """,
+        validator=strict_discrete_set,
+        values={"1V": 1,
+                "0V": 2,
+                },
+        map_values=True,
+        get_process=lambda v: v.lstrip(b'LV'),
+        )
 
     VCO = Instrument.control(
        "QVC", "VC%d",
        """
-       this property controls the feature of VCO
+       controls the VCO feature
 
        ...
 
@@ -426,7 +427,7 @@ class HP3314A(Instrument):
 
     def shutdown(self):
         """
-        provides a way to gracefully close the connection to the HP3478A
+        provides a way to gracefully close the connection to the HP3314A
 
         """
         self.adapter.connection.clear()
