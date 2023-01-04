@@ -54,7 +54,7 @@ class HP3314A(Instrument):
         )
 
     # overlaoding the read-fcn for now, until GPIB issue fixed
-    # Problem is theat normal read() will run into timeout, even with proper temchar
+    # Problem is the normal read() will run into timeout, even with proper temchar
     def read(self):
         rec_data = self.adapter.connection.read_bytes(30)
         return rec_data.rstrip()
@@ -67,7 +67,7 @@ class HP3314A(Instrument):
         "QAP",
         "AP%fVO",
         """
-        controls the Amplitude (referenced to 50 Ohms load(!)) of the unit.
+        Control the Amplitude (referenced to 50 Ohms load(!)) of the unit.
 
         """,
         validator=strict_range,
@@ -78,9 +78,17 @@ class HP3314A(Instrument):
     AM = Instrument.control(
        "QAM", "AM%d",
        """
-       controls the feature of amplitude modulation (AM) of the unit
+       Control the status of amplitude modulation (AM)
 
-       ...
+       ======  =======
+       Value   Amplitude modulation
+       ======  =======
+       False   OFF
+       True    ON
+       ======  =======
+
+       .. Note::
+           Signal source for modulation needs to be connected to the AM-connector on the front
 
        """,
        validator=strict_discrete_set,
@@ -102,8 +110,8 @@ class HP3314A(Instrument):
     data_transfer_buffered = Instrument.setting(
         "DM%d",
         """
-        This setting switches between unbuffered (False) and buffered (True)
-        data transfer mode.
+        Switch setting between unbuffered (False) and buffered (True) data transfer mode.
+
         """,
         values={False: 1, True: 2},
         map_values=True,
@@ -114,9 +122,15 @@ class HP3314A(Instrument):
     external_trigger = Instrument.control(
        "QSR", "SR%d",
        """
-       controls the trigger source selection:
-           False: Internal
-           True: External
+       Control the trigger source selection
+
+       ======  =======
+       Value   Trigger source
+       ======  =======
+       False   Internal
+       True    External
+       ======  =======
+
 
        """,
        validator=strict_discrete_set,
@@ -128,9 +142,17 @@ class HP3314A(Instrument):
     FM = Instrument.control(
        "QFM", "FM%d",
        """
-       controls the featrue of frequency modulation (FM) of the unit
+       Control the status of frequency modulation (FM)
 
-       ...
+       ======  =======
+       Value   Frequency modulation
+       ======  =======
+       False   OFF
+       True    ON
+       ======  =======
+
+       .. Note::
+           Signal source for modulation needs to be connected to the FM/VCO-connector on the front
 
        """,
        validator=strict_discrete_set,
@@ -143,7 +165,7 @@ class HP3314A(Instrument):
         "QFR",
         "FR%fHZ",
         """
-        controls the output frequency of the unit.
+        Control the output frequency.
 
         """,
         validator=strict_range,
@@ -154,9 +176,16 @@ class HP3314A(Instrument):
     func = Instrument.control(
        "QFU", "FU %d",
        """
-       controls the function (output mode) of the unit
+       Control the function (output mode) of the unit.
 
-       ...
+       ========  =======
+       Value     Output mode
+       ========  =======
+       "off"     Output disabled _Note_: DC offset is still output
+       "Sine"    Sinewave
+       "Square"  Square wave
+       "Trig"    Trianglar (sawtooth)
+       ========  =======
 
        """,
        validator=strict_discrete_set,
@@ -172,7 +201,14 @@ class HP3314A(Instrument):
     func_inverted = Instrument.control(
        "QFI", "FI%d",
        """
-       controls if the output of the intrument is inverted
+       Control the status of the the output-invert-function
+
+       ======  =======
+       Value   Output shape
+       ======  =======
+       False   normal
+       True    inverted
+       ======  =======
 
        """,
        validator=strict_discrete_set,
@@ -186,7 +222,7 @@ class HP3314A(Instrument):
     manual_sweep_enabled = Instrument.control(
        "QMA", "MA%d",
        """
-       enables the manual sweep
+       Enable a manual sweep
 
        """,
        validator=strict_discrete_set,
@@ -199,7 +235,7 @@ class HP3314A(Instrument):
         "QMK",
         "MK%fHZ",
         """
-        controls the marker frequency setting .
+        Control the marker frequency.
 
         """,
         validator=strict_range,
@@ -210,11 +246,18 @@ class HP3314A(Instrument):
     mode = Instrument.control(
         "QMO", "MO%d",
         """
-        controls the mode of the unit
+        Control the synchronization possibilities of the unit
 
-        TODO: be more specific
-        ...
-
+        =============  =======
+        Value          Selection
+        =============  =======
+        "Free_Run"     Free running (no sync applied)
+        "Gated"        gated output
+        "n_cycle"      output limited to n cycles
+        "half_cycle"   output a half-cyle e.g. haversine
+        "fin_N_X"      f_out is N times higher then frequency applied to sync terminal
+        "fin_X_div_N"  f_out is 1/N of frequency applied to sync terminal
+        =============  =======
         """,
         validator=strict_discrete_set,
         values={"Free_Run": 1,
@@ -232,7 +275,7 @@ class HP3314A(Instrument):
         "QNM",
         "NM%dEN",
         """
-        controls the number of cycles/events to be put put by the instrument.
+        Control the number of cycles/events to be output.
 
         """,
         validator=strict_range,
@@ -243,9 +286,14 @@ class HP3314A(Instrument):
     negative_trigger_slope = Instrument.control(
        "QSL", "SL%d",
        """
-       controls the trigger slope selection:
-           False: positive
-           True: negative
+       Control the the trigger slope selection:
+
+       ======  =======
+       Value   Trigger slope
+       ======  =======
+       False   positive (L --> H)
+       True    negative (H --> L)
+       ======  =======
 
        """,
        validator=strict_discrete_set,
@@ -258,7 +306,7 @@ class HP3314A(Instrument):
         "QOF",
         "OF%fVO",
         """
-        controls the offset of the output signal.
+        Control the offset of the output signal in the range of -5..+5 V
 
         """,
         validator=strict_range,
@@ -270,7 +318,7 @@ class HP3314A(Instrument):
         "QPH",
         "PH%fDG",
         """
-        controls the phase of the output signal.
+        Control the phase of the output signal (0..360 degrees)
 
         """,
         validator=strict_range,
@@ -282,17 +330,19 @@ class HP3314A(Instrument):
 
     def preset(self):
         """
-        Presets the device to a default state, refer to manaul for specifics
+        Preset the device to a default state, refer to manaul for specifics
+
         """
         self.write("PR")
 
     # TODO: add range hold and range up/down
 
-    # TODO: add comment abour store
     recall_preset = Instrument.setting(
         "RC%d",
         """
-        With this setting user-defined presets can be recalled
+        Recall a user-defined setup.
+        This instrument allows 6 setups [0..5]
+
         """,
         values=[0, 5],
         validator=strict_range,
@@ -302,8 +352,9 @@ class HP3314A(Instrument):
         "QRW",
         "RW%f",
         """
-        controls the selection of the waveform for the ARB functionality
-        when selecting a wavefowm, this also enabled the ARB-function
+        Recall the waveform for the ARB functionality.
+        When selecting a wavefowm (up to 5), this also enables the ARB-function
+
         """,
         validator=strict_range,
         values=[0, 5],
@@ -316,7 +367,7 @@ class HP3314A(Instrument):
         "QST",
         "ST%fHZ",
         """
-        controls the start-frequency for sweeps
+        Control the start-frequency for sweep-mode
 
         """,
         validator=strict_range,
@@ -328,7 +379,7 @@ class HP3314A(Instrument):
         "QSP",
         "SP%fHZ",
         """
-        controls the stop-frequency for swee@s
+        Control the stop-frequency for sweep-mode
 
         """,
         validator=strict_range,
@@ -339,7 +390,9 @@ class HP3314A(Instrument):
     store_preset = Instrument.setting(
         "SO%d",
         """
-        With this setting user-defined presets can be stored
+        Store a user-defined setup.
+        6 slots avialable [0..5], with Slot 0 defining the power-on setup
+
         """,
         values=[0, 5],
         validator=strict_range,
@@ -348,9 +401,15 @@ class HP3314A(Instrument):
     sweep = Instrument.control(
        "QSW", "SW %d",
        """
-       controls the sweep-mode of the unit
+       Control the sweep-mode of the unit
 
-       ...
+       ======  =======
+       Value   Mode
+       ======  =======
+       "off"   no sweep
+       "lin"   linear frequency sweep
+       "log"   logarithmic frequency sweep
+       ======  =======
 
        """,
        validator=strict_discrete_set,
@@ -366,7 +425,8 @@ class HP3314A(Instrument):
         "QSY",
         "SY%dPS",
         """
-        controls the phase of the output signal.
+        Control the symmetry of the output signal.
+        Allowed range is 1..99, representing 1..99%
 
         """,
         validator=strict_range,
@@ -378,7 +438,7 @@ class HP3314A(Instrument):
         "QTI",
         "TI%fSN",
         """
-        controls the sweep-tim / trigger time intervall of the unit.
+        Control the sweep-time / trigger time intervall of the unit.
 
         """,
         validator=strict_range,
@@ -389,9 +449,9 @@ class HP3314A(Instrument):
     trigger_threshold = Instrument.control(
         "QLV", "LV%d",
         """
-        controls the sweep-mode of the unit
+        Control the trigger threshold
 
-        ...
+        Possible selections "1V", "0V"
 
         """,
         validator=strict_discrete_set,
@@ -405,10 +465,17 @@ class HP3314A(Instrument):
     VCO = Instrument.control(
        "QVC", "VC%d",
        """
-       controls the VCO feature
+       Control the VCO function
 
-       ...
+       ======  =======
+       Value   VCO function
+       ======  =======
+       False   OFF
+       True    ON
+       ======  =======
 
+       .. Note::
+            Signal source needs to be connected to the FM/VCO-connector on the front
        """,
        validator=strict_discrete_set,
        values={False: 0, True: 1},
@@ -420,14 +487,14 @@ class HP3314A(Instrument):
 
     def reset(self):
         """
-        Initatiates a reset (like a power-on reset) of the HP3478A
+        Initatiate a reset (like a power-on reset) of the HP3478A
 
         """
         self.adapter.connection.clear()
 
     def shutdown(self):
         """
-        provides a way to gracefully close the connection to the HP3314A
+        Provide a way to gracefully close the connection to the HP3314A
 
         """
         self.adapter.connection.clear()
