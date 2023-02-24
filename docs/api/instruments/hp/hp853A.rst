@@ -1,0 +1,23 @@
+###################################################
+HP 853A Spectrum analzyer digital storage mainframe
+###################################################
+This legacy device can take plugins from the HP 855x family
+
+Depending on the plugin the following frequency range is covered:
+
+=======  ===============
+Plugin   Frequency range
+=======  ===============
+HP8557A  10 kHz - 350 MHz
+HP8558A  100 kHz - 1500 MHz
+HP8559A  10 MHz - 21 GHz
+=======  ===============
+
+
+.. autoclass:: pymeasure.instruments.hp.HP853A
+    :members:
+    :show-inheritance:
+
+.. autoclass:: pymeasure.instruments.hp.hp853a.trace
+    :members:
+    :show-inheritance:

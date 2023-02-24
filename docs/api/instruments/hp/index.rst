@@ -9,6 +9,7 @@ This section contains specific documentation on the Hewlett Packard instruments 
 .. toctree::
    :maxdepth: 2
 
+   hp853A
    hp33120A
    hp34401A
    hp3437A
