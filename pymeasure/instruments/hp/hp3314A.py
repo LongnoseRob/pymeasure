@@ -1,7 +1,7 @@
 #
 # This file is part of the PyMeasure package.
 #
-# Copyright (c) 2013-2022 PyMeasure Developers
+# Copyright (c) 2013-2023 PyMeasure Developers
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -110,7 +110,7 @@ class HP3314A(Instrument):
     data_transfer_buffered = Instrument.setting(
         "DM%d",
         """
-        Switch setting between unbuffered (False) and buffered (True) data transfer mode.
+        Control setting for  unbuffered (False) and buffered (True) data transfer mode.
 
         """,
         values={False: 1, True: 2},
@@ -286,7 +286,7 @@ class HP3314A(Instrument):
     negative_trigger_slope = Instrument.control(
        "QSL", "SL%d",
        """
-       Control the the trigger slope selection:
+       Control the trigger slope selection:
 
        ======  =======
        Value   Trigger slope
@@ -330,7 +330,7 @@ class HP3314A(Instrument):
 
     def preset(self):
         """
-        Preset the device to a default state, refer to manaul for specifics
+        Set the device to a default state, refer to manaul for specifics
 
         """
         self.write("PR")
@@ -340,7 +340,7 @@ class HP3314A(Instrument):
     recall_preset = Instrument.setting(
         "RC%d",
         """
-        Recall a user-defined setup.
+        Get a user-defined setup.
         This instrument allows 6 setups [0..5]
 
         """,
@@ -352,7 +352,7 @@ class HP3314A(Instrument):
         "QRW",
         "RW%f",
         """
-        Recall the waveform for the ARB functionality.
+        Control the waveform for the ARB functionality.
         When selecting a wavefowm (up to 5), this also enables the ARB-function
 
         """,
@@ -390,7 +390,7 @@ class HP3314A(Instrument):
     store_preset = Instrument.setting(
         "SO%d",
         """
-        Store a user-defined setup.
+        Set the current configuration toa  a user-defined setup slot.
         6 slots avialable [0..5], with Slot 0 defining the power-on setup
 
         """,
